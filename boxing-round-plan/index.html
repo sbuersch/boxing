@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Boxing Sparring Round Plan</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --glove-red: #c62828;
+      --glove-dark: #8e1b1b;
+      --ring-dark: #14141c;
+      --ring-panel: #1e1e2a;
+    }
+    body {
+      background: linear-gradient(160deg, var(--ring-dark) 0%, #1a1224 100%);
+      min-height: 100vh;
+      color: #e8e8f0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    .hero-title {
+      font-weight: 900;
+      letter-spacing: .5px;
+      text-shadow: 0 3px 12px rgba(198, 40, 40, .45);
+    }
+    .accent { color: #ff5252; }
+    .input-group-text {
+      background: var(--ring-panel);
+      border-color: #33334a;
+      color: #cfcfe0;
+    }
+    .boxer-input {
+      background: #101018;
+      border-color: #33334a;
+      color: #fff;
+      font-weight: 700;
+      text-align: center;
+    }
+    .boxer-input:focus {
+      border-color: var(--glove-red);
+      box-shadow: 0 0 0 .25rem rgba(198, 40, 40, .3);
+    }
+    .btn-go {
+      background: linear-gradient(135deg, var(--glove-red), var(--glove-dark));
+      border: none;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+    .btn-go:hover {
+      background: linear-gradient(135deg, #e53935, var(--glove-red));
+      color: #fff;
+    }
+    .card-ring {
+      background: var(--ring-panel);
+      border: 1px solid #2e2e42;
+      border-radius: 14px;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .card-ring:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+    }
+    .round-badge {
+      background: linear-gradient(135deg, var(--glove-red), var(--glove-dark));
+      font-weight: 800;
+    }
+    .fight-row {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .45rem .75rem;
+      border-radius: 8px;
+      background: #14141e;
+      border: 1px solid #2a2a3c;
+    }
+    .fighter {
+      flex: 1;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .fighter.right { text-align: right; }
+    .vs {
+      color: var(--glove-red);
+      font-weight: 900;
+      font-size: .85rem;
+      flex: 0 0 auto;
+    }
+    .bye-row {
+      color: #9a9ab0;
+      font-style: italic;
+    }
+    .stat-pill {
+      background: #101018;
+      border: 1px solid #2e2e42;
+      font-weight: 600;
+    }
+    .table-plan td, .table-plan th { vertical-align: middle; }
+    #emptyState { border: 2px dashed #33334a; }
+    .form-check-input:checked {
+      background-color: var(--glove-red);
+      border-color: var(--glove-red);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container py-4 py-lg-5">
+  <div class="text-center mb-4">
+    <h1 class="hero-title h1 mt-0">
+      <i class="bi bi-emoji-fight me-2 accent"></i>Sparring Round Plan
+      <i class="bi bi-emoji-fight ms-2 accent" style="transform: scaleX(-1); display:inline-block;"></i>
+    </h1>
+    <p class="text-secondary mb-0">Round-robin plan: every boxer spars with every other boxer exactly once.</p>
+  </div>
+
+  <!-- Controls -->
+  <div class="card-ring p-3 p-lg-4 mb-4">
+    <form id="planForm" class="row g-3 align-items-center" onsubmit="return false;">
+      <div class="col-12 col-md-auto">
+        <label for="numBoxers" class="form-label mb-1 text-secondary small text-uppercase fw-semibold">Boxers</label>
+        <input type="number" id="numBoxers" class="form-control boxer-input" min="2" max="60" value="6" required>
+      </div>
+      <div class="col-12 col-md-auto">
+        <label class="form-label mb-1 text-secondary small text-uppercase fw-semibold">&nbsp;</label>
+        <button type="button" id="goBtn" class="btn btn-go btn-lg px-5">
+          <i class="bi bi-lightning-charge-fill me-1"></i>GO
+        </button>
+      </div>
+      <div class="col-12 col-md-auto ms-auto">
+        <div class="form-check form-switch mt-2">
+          <input class="form-check-input" type="checkbox" id="shufflePairs" checked>
+          <label class="form-check-label small text-secondary" for="shufflePairs">Shuffle fight order</label>
+        </div>
+      </div>
+    </form>
+    <div id="validationMsg" class="text-danger small mt-2"></div>
+  </div>
+
+  <!-- Stats -->
+  <div id="stats" class="d-none row g-2 mb-4">
+    <div class="col-6 col-md-2"><div class="stat-pill text-center rounded p-2"><div class="small text-secondary">Boxers</div><span id="statBoxers">–</span></div></div>
+    <div class="col-6 col-md-2"><div class="stat-pill text-center rounded p-2"><div class="small text-secondary">Rounds</div><span id="statRounds">–</span></div></div>
+    <div class="col-6 col-md-2"><div class="stat-pill text-center rounded p-2"><div class="small text-secondary">Fights</div><span id="statFights">–</span></div></div>
+    <div class="col-6 col-md-2"><div class="stat-pill text-center rounded p-2"><div class="small text-secondary">Fights / boxer</div><span id="statPerBoxer">–</span></div></div>
+  </div>
+
+  <!-- Plan -->
+  <div id="emptyState" class="rounded-3 p-5 text-center text-secondary mb-4">
+    <i class="bi bi-emoji-fight display-4 d-block mb-3 accent" style="opacity:.6"></i>
+    Enter a number of boxers and hit <strong class="accent">GO</strong> to generate a random sparring plan.
+  </div>
+
+  <div id="plan" class="row g-3"></div>
+
+  <!-- Full table view -->
+  <div id="tableView" class="card-ring p-3 mt-4 d-none">
+    <h6 class="fw-bold"><i class="bi bi-table me-2 accent"></i>Full plan</h6>
+    <div class="table-responsive">
+      <table class="table table-sm table-plan align-middle mb-0" id="planTable"></table>
+    </div>
+  </div>
+
+  <div class="text-center text-secondary small mt-5">
+    <button id="copyBtn" class="btn btn-outline-secondary btn-sm d-none"><i class="bi bi-clipboard me-1"></i>Copy plan</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+
+// Fisher–Yates shuffle (returns a new shuffled array)
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/**
+ * Classic circle-method round robin.
+ * Returns an array of rounds; each round is a list of [a, b] pairs
+ * (indices). For odd N one boxer rests per round (bye).
+ */
+function roundRobin(n) {
+  const players = Array.from({ length: n }, (_, i) => i);
+  if (n % 2 === 1) players.push(null); // bye slot
+  const size = players.length;
+  const rounds = [];
+  for (let r = 0; r < size - 1; r++) {
+    const pairs = [];
+    for (let i = 0; i < size / 2; i++) {
+      const a = players[i];
+      const b = players[size - 1 - i];
+      if (a !== null && b !== null) pairs.push([a, b]);
+    }
+    rounds.push(pairs);
+    // rotate everyone except the pinned first slot
+    players.splice(1, 0, players.pop());
+  }
+  return rounds;
+}
+
+/** Verify every pair occurs exactly once (dev sanity check). */
+function verifyPlan(n, rounds) {
+  const seen = new Set();
+  for (const round of rounds) {
+    for (const [a, b] of round) {
+      const key = Math.min(a, b) + "-" + Math.max(a, b);
+      if (seen.has(key)) throw new Error("Duplicate pair: " + key);
+      seen.add(key);
+    }
+  }
+  if (seen.size !== n * (n - 1) / 2) throw new Error("Missing pairs");
+}
+
+function buildPlan(n) {
+  let rounds = roundRobin(n);
+  verifyPlan(n, rounds);
+
+  // Randomize: shuffle round order and fight order within each round.
+  if ($("shufflePairs").checked) {
+    rounds = shuffle(rounds);
+    rounds = rounds.map((pairs) => shuffle(pairs));
+  }
+  return rounds;
+}
+
+function render(rounds, n) {
+  const planEl = $("plan");
+  planEl.innerHTML = "";
+  const totalFights = n * (n - 1) / 2;
+
+  $("stats").classList.remove("d-none");
+  $("statBoxers").textContent = n;
+  $("statRounds").textContent = rounds.length;
+  $("statFights").textContent = totalFights;
+  $("statPerBoxer").textContent = n - 1;
+
+  let tableRows = "";
+  rounds.forEach((pairs, idx) => {
+    const col = document.createElement("div");
+    col.className = "col-12 col-md-6 col-xl-4";
+
+    const fightsHtml = pairs
+      .map(([a, b]) =>
+        `<div class="fight-row">
+           <span class="fighter">Boxer ${a + 1}</span>
+           <span class="vs">VS</span>
+           <span class="fighter right">Boxer ${b + 1}</span>
+         </div>`)
+      .join("");
+
+    const bye = (pairs.length * 2 < n) ?
+      `<div class="fight-row bye-row">Boxer ${[...Array(n).keys()].find(i => !pairs.some(p => p.includes(i))) + 1} rests</div>` :
+      "";
+
+    col.innerHTML = `
+      <div class="card-ring p-3 h-100">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="badge rounded-pill round-badge px-3 py-2">Round ${idx + 1}</span>
+          <span class="small text-secondary">${pairs.length} fight${pairs.length > 1 ? "s" : ""}</span>
+        </div>
+        <div class="d-grid gap-2">${fightsHtml}${bye}</div>
+      </div>`;
+    planEl.appendChild(col);
+
+    const pairsText = pairs.map(([a, b]) => `Boxer ${a + 1} vs Boxer ${b + 1}`).join(" · ");
+    tableRows += `<tr><th class="pe-2" style="white-space:nowrap">Round ${idx + 1}</th><td>${pairsText}</td></tr>`;
+  });
+
+  const table = $("planTable");
+  table.innerHTML = `<tbody>${tableRows}</tbody>`;
+  $("tableView").classList.remove("d-none");
+  $("copyBtn").classList.remove("d-none");
+
+  // keep copy button text in sync
+  $("copyBtn").onclick = async () => {
+    const text = rounds
+      .map((pairs, i) => `Round ${i + 1}: ` + pairs.map(([a, b]) => `Boxer ${a + 1} vs Boxer ${b + 1}`).join(", "))
+      .join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      $("copyBtn").innerHTML = '<i class="bi bi-check-lg me-1"></i>Copied!';
+    } catch {
+      $("copyBtn").innerHTML = '<i class="bi bi-x-lg me-1"></i>Copy failed';
+    }
+    setTimeout(() => { $("copyBtn").innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy plan'; }, 1500);
+  };
+}
+
+function go() {
+  const n = parseInt($("numBoxers").value, 10);
+  const msg = $("validationMsg");
+  msg.textContent = "";
+
+  if (!Number.isInteger(n) || n < 2) {
+    msg.textContent = "Please enter at least 2 boxers.";
+    return;
+  }
+  if (n > 60) {
+    msg.textContent = "Please keep it under 60 boxers to keep the plan usable.";
+    return;
+  }
+
+  $("emptyState").classList.add("d-none");
+  render(buildPlan(n), n);
+}
+
+$("goBtn").addEventListener("click", go);
+$("numBoxers").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+
+go(); // initial demo plan on load
+</script>
+</body>
+</html>
